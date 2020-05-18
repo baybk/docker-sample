@@ -1,0 +1,73 @@
+version: "3"
+
+# NETWORKS
+networks:
+  my-network:
+    driver: bridge
+
+# VOLUMES
+volumes:
+  dir-site:
+    driver_opts:
+      type: tmpfs
+      device: /home/bay/mycode/sites/
+      o: bind
+
+services:
+
+  php:
+    container_name: php
+    build:
+      dockerfile: Dockerfile
+      context: ./php/
+    hostname: php
+    restart: always
+    networks: 
+      - my-network
+    volumes:
+      - dir-site:/home/sites/
+
+  
+  mysql:
+    container_name: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    image: mysql
+    restart: always
+    networks: 
+      - my-network
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=db_site
+      - MYSQL_USER=siteuser
+      - MYSQL_PASSWORD=sitepass
+
+  httpd:
+    container_name: httpd
+    image: httpd
+    restart: always            
+    hostname: httpd
+    networks: 
+      - my-network
+    links:
+      - mysql:mysql  
+    volumes:
+      - dir-site:/home/sites/
+      - ./httpd.conf:/usr/local/apache2/conf/httpd.conf
+    ports:
+      - "9999:80"
+      - "443:443"
+
+ 
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+     - PMA_ARBITRARY=1
+    restart: always
+    networks: 
+      - my-network
+    ports:
+     - "8899:80"
+    volumes:
+     - /sessions
+
