@@ -43,7 +43,10 @@ services:
 
   httpd:
     container_name: httpd
-    image: httpd
+    build:
+      dockerfile: Dockerfile
+      context: ./httpd/
+    # image: httpd
     restart: always            
     hostname: httpd
     networks: 
